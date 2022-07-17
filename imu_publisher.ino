@@ -10,17 +10,10 @@
 #include <rclc/rclc.h>
 #include <rclc/executor.h>
 
-#include <std_msgs/msg/float32_multi_array.h>
 #include <sensor_msgs/msg/imu.h>
-#include <std_msgs/msg/string.h>
 
-rcl_publisher_t publisher;
-
-// std_msgs__msg__Float32__Sequence imu_msg;
-// std_msgs__msg__String imu_msg;
-// sensor_msgs__msg__JointState imu_msg;
 sensor_msgs__msg__Imu imu_msg;
-
+rcl_publisher_t publisher;
 rclc_executor_t executor;
 rclc_support_t support;
 rcl_allocator_t allocator;
@@ -49,12 +42,6 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
     RCSOFTCHECK(rcl_publish(&publisher, &imu_msg, NULL));
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
-    
-    // imu_msg.name.size = 1;
-    // imu_msg.name.data[0].data = "acc_x";
-    // imu_msg.name.data[0].size = 17; //Size in bytes excluding null terminator
-    // imu_msg.position.size = 1;
-    // imu_msg.position.data[0] = a.acceleration.x;
 
     imu_msg.linear_acceleration.x = a.acceleration.x;
     imu_msg.linear_acceleration.y = a.acceleration.y;
@@ -68,7 +55,8 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
 }
 
 void setup() {
-  set_microros_transports();
+  // set_microros_transports();
+  set_microros_wifi_transports("wifi-ssid", "wifi-pass", "host-machine-ip", 8888);
 
   // Try to initialize!
   if (!mpu.begin()) {
@@ -78,10 +66,6 @@ void setup() {
     }
   }
   Serial.println("MPU6050 Found!");
-  
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);  
-  delay(2000);
 
   allocator = rcl_get_default_allocator();
 
@@ -89,14 +73,14 @@ void setup() {
   RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
 
   // create node
-  RCCHECK(rclc_node_init_default(&node, "imu_node", "", &support));
+  RCCHECK(rclc_node_init_default(&node, "imu_publisher_node", "", &support));
 
   // create publisher
   RCCHECK(rclc_publisher_init_default(
     &publisher,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(sensor_msgs, msg, Imu),
-    "imu_publisher"));
+    "imu_info_topic"));
 
   // create timer,
   const unsigned int timer_timeout = 1000;
