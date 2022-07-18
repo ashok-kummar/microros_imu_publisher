@@ -55,8 +55,7 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time)
 }
 
 void setup() {
-  // set_microros_transports();
-  set_microros_wifi_transports("wifi-ssid", "wifi-pass", "host-machine-ip", 8888);
+  set_microros_transports();
 
   // Try to initialize!
   if (!mpu.begin()) {
